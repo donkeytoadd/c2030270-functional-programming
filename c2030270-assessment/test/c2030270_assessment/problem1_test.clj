@@ -32,7 +32,6 @@
     )
   
   (testing "Edge cases"
-    (is (= (square-each-value-in-list [])
-           ()))
+    (is (= (square-each-value-in-list []) ()))
     )
   )
