@@ -20,9 +20,7 @@
     (let [garden-length (count garden)
           mid-point (/ garden-length 2)]
       [(subs garden 0 mid-point)
-       (subs garden mid-point garden-length)])
-    )
-  )
+       (subs garden mid-point garden-length)])))
 
 (def map-character-to-plant {\G "grass" \C "clover" \R "radishes" \V "violets"})
 
@@ -33,6 +31,5 @@
         index (.indexOf students student)
         start (* index 2)
         end (+ start 2)
-        [row1 row2] garden
         student-cups (concat (subs row1 start end) (subs row2 start end))]
     (map map-character-to-plant student-cups)))
