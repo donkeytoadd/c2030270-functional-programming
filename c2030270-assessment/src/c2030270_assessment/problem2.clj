@@ -1,35 +1,56 @@
 (ns c2030270-assessment.problem2
-  (:require [clojure.string :as str :refer [split]]))
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]))
 
-(defn normalise-garden-input [garden]
-  (cond
-    (and
-    ;checks garden input to see if it is some kind of ordered sequence (list, vector or lazy sequence) 
-     (sequential? garden)
-     ;checks if input is 2 strings
-     (= 2 (count garden))
-     (every? string? garden))
-    (vec garden)
+(s/def ::student-name (s/and string? #(not (str/blank? %))))
+(s/def ::students (s/coll-of ::student-name :kind vector? :min-count 1))
 
-    ;if input is a string, checks if its split with either a space or newline character, and then splits the string on that character
-    (and (string? garden) (re-find #"[ \n]" garden))
-    (vec (str/split garden #"[ \n]"))
+(defn generate-students []
+  (println "Input the number of students you want: ")
+  (flush)
+  (let [amount-of-students (try (Integer/parseInt (read-line))
+                                (catch Exception ex
+                                  (println "Error:" (.getMessage ex))
+                                  (generate-students)))]
+    (loop [count 0 students []]
+      (if (= count amount-of-students)
+        students
+        (do
+          (println (str "Enter name for student " (inc count) ": "))
+          (flush)
+          (let [name (read-line)]
+            (if (s/valid? ::student-name name)
+              (recur (inc count) (conj students name))
+              (do (println "Invalid name, please try again") (recur count students)))))))))
 
-    ;if input is one long string, then it finds the midpoint and creates a vector madeup of 2 items, each being a substring of the original input string
-    (string? garden)
-    (let [garden-length (count garden)
-          mid-point (/ garden-length 2)]
-      [(subs garden 0 mid-point)
-       (subs garden mid-point garden-length)])))
+;load from config file or database type structure, makes it better
+(def plant-codes [\G \C \R \V])
+
+(defn generate-garden [amount-of-students]
+  (let [random-plant #(rand-nth plant-codes)
+        row-length (* 2 amount-of-students)
+        create-row #(apply str (repeatedly row-length random-plant))]
+    [(create-row) (create-row)]))
 
 (def map-character-to-plant {\G "grass" \C "clover" \R "radishes" \V "violets"})
 
 (defn get-student-plants [garden students student]
-  (let [garden (normalise-garden-input garden)
-        students (sort (vec students))
-        [row1 row2] garden
-        index (.indexOf students student)
+  (let [[row1 row2] garden
+        sorted-students (sort students)
+        index (.indexOf sorted-students student)
         start (* index 2)
         end (+ start 2)
         student-cups (concat (subs row1 start end) (subs row2 start end))]
     (map map-character-to-plant student-cups)))
+
+(defn main []
+  (let [students (generate-students)
+        garden (generate-garden (count students))
+        [row1 row2] garden]
+    (println "\nStudents: " students)
+    (println "\nGarden:\n" row1 "\n" row2)
+    (println "\nEnter a student's name to see their plants:")
+    (let [input (read-line)]
+      (println input "has plants:" (vec (get-student-plants garden students input))))))
+
+(main)
