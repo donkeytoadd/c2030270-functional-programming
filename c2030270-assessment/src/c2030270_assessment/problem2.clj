@@ -35,11 +35,29 @@
       (throw (ex-info "Invalid garden rows" {:row1 row1 :row2 row2})))
     garden))
 
+(s/fdef ->garden
+  ;concatenates rows into a single sequence as well as checking them against the row spec 
+  :args (s/cat :row1 ::row :row2 ::row)
+  ;validates that the output must be a valid garden record (it passes checks in the garden-record sdef)
+  :ret  ::garden-record)
+
 (defn generate-garden [amount-of-students]
   (let [random-plant #(rand-nth (vec plant-codes))
         row-length (* 2 amount-of-students)
         create-row #(apply str (repeatedly row-length random-plant))]
     (->garden (create-row) (create-row))))
+
+(s/fdef generate-garden
+  ;validates that input must be a positive integer
+  :args (s/cat :amount-of-students pos-int?)
+  ;function must return a valid garden record
+  :ret  ::garden-record
+  ;checks relationship between args and ret 
+  ;checks if rows match expected length based on amount of students
+  :fn   (fn [{:keys [args ret]}]
+          (let [expected-length (* 2 (:amount-of-students args))]
+            (and (= (count (:row1 ret)) expected-length)
+                 (= (count (:row2 ret)) expected-length)))))
 
 (defn generate-students []
   (let [amount-of-students (loop []
@@ -66,6 +84,19 @@
 (defn normalise-students [students]
   ;removes any duplicate names and sorts alphabetically, then ensures a vector is returned
   (->> students distinct sort vec))
+
+(s/fdef normalise-students
+  ;validates that input and output are collections of strings
+  :args (s/cat :students (s/coll-of string?))
+  :ret  (s/coll-of string?)
+  ;checks if returned list is sorted
+  ;checks if returned list has had its duplicates removed
+  ;makes sure that the returned list is smaller or equal to the orignal list
+  :fn   (fn [{:keys [args ret]}]
+          (and
+           (= ret (sort ret))
+           (= ret (distinct ret))
+           (<= (count ret) (count (:students args))))))
 
 (defn get-student-index [sorted-students student]
   (let [index (.indexOf sorted-students student)]
@@ -110,5 +141,3 @@
             (catch Exception ex
               (println "\nError:" (.getMessage ex))))
           (recur))))))
-
-(main)

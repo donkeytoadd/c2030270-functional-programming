@@ -1,7 +1,8 @@
 (ns c2030270-assessment.problem2-test
   (:require [clojure.test :refer :all]
             [c2030270-assessment.problem2 :refer :all]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clojure.spec.test.alpha :as st]))
 
 (def example-row1 "VRCGVVRVCGGCCGVRGCVCGCGV")
 (def example-row2 "VRCCCGCRRGVCGCRVVCVGCGCV")
@@ -55,3 +56,12 @@
 
   (testing "Throws exception when name not found"
     (is (thrown? clojure.lang.ExceptionInfo (get-student-index default-student-list "Bartholomew")))))
+
+(deftest spec-tests
+  (testing "Generative tests using specs"
+    (is (true? (:result (:clojure.spec.test.check/ret (first (st/check `normalise-students))))))
+
+    ;i tried getting st/check to run with ->garden and generate-garden but they rely on extra generators to make them work
+    ;they would require extra effort to constrain inputs e.g restricting strings to specific plant codes or limiting integer size
+    ;amount of cups
+    ))
